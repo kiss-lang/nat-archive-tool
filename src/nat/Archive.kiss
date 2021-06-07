@@ -1,0 +1,42 @@
+(defnew [&prop :String archiveDir]
+
+    [:Array<System> systems
+            []
+        :Map<String,Template> templates
+            (new Map)
+        :Map<String,Entry> entries
+            (let [entryFiles (FileSystem.readDirectory (Path.join [archiveDir "entries"]))]
+                (for file entryFiles =>(file.withoutExtension) ~(the Entry (Json.parse (File.getContent (Path.join [archiveDir "entries" file]))))))])
+
+(defmethod addSystem [:System system]
+    // Assign entries to the Systems that care about them
+    (doFor =>id entry entries
+        (system.checkEntryInOrOut this entry))
+    (systems.push system))
+
+(defmethod addTemplate [name template]
+    (dictSet templates name template))
+
+(defmethod :Entry createEntry [template]
+    (let [e (_newEntry)]
+        (.prepareEntry (dictGet templates template) e)
+        (doFor system systems
+            (system.checkEntryInOrOut this e))
+        e))
+
+(defmethod saveEntry [:Entry e]
+    (File.saveContent
+        (Path.join [archiveDir "entries" (e.id.withExtension "json")])
+        (Json.stringify e))
+        
+    // TODO save its components? but it's not obvious how, because it only knows the string keys of them.
+    // Better yet, retrieving components with mutable access should be done through a
+    // (withComponent...) macro that serializes the component after the block is done.
+    // 
+    )
+
+(defun :Entry _newEntry []
+    (object
+        id (Uuid.v4)
+        components (new Map)
+        files []))

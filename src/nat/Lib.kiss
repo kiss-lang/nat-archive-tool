@@ -1,0 +1,20 @@
+// Lib is its own class because, while it would make sense to group its functions and macros in Archive.kiss,
+// other files would not be able to (load "Archive.kiss") for the macro definitions without taking on Archive's constructor.
+
+(defmacro hasComponent [e componentType]
+    `(.exists .components ,e ,(symbolName componentType)))
+
+// TODO add to the documentation a hint that macros should use fully qualified paths so macro caller classes don't need to import everything
+(defmacro getComponent [archive e componentType]
+    `(the nat.components ,componentType 
+        (tink.Json.parse
+            (sys.io.File.getContent
+                (haxe.io.Path.join [.archiveDir (the nat.Archive ,archive) "components" (+ (dictGet (the Map<String,String> .components ,e) ,(symbolName componentType)) ".json")])))))
+
+(defun tagList [archive e]
+    (let [t
+                (getComponent archive e Tags)]
+        (collect (t.keys))))
+
+(defun tagsMatch [archive e tagsBoolExp]
+    (BoolExpInterp.eval tagsBoolExp (tagList archive e)))

@@ -1,0 +1,5 @@
+-lib kiss
+-lib nat-archive-tool
+-cp src
+--main Main
+--interp
