@@ -1,6 +1,7 @@
 -D test
+-lib uuid
 -lib kiss
--lib nat-archive-tool
+-lib kiss-tools
 -lib requests-externs
--cp test
+-cp src
 --main test.TestMain

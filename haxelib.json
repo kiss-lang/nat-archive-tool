@@ -12,6 +12,8 @@
     "dependencies": {
         "kiss": "",
         "kiss-tools": "",
-        "tink_json": ""
+        "tink_json": "",
+        "uuid": "",
+        "requests-externs": ""
     }
 }

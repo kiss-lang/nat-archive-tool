@@ -2,6 +2,6 @@ package test;
 
 class TestMain {
     static function main() {
-        TestMain_.main();
+        test.TestMain_.main();
     }
 }
