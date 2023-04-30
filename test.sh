@@ -2,6 +2,7 @@
 
 if [ -n "$CI_OS_NAME" ]; then
     lix install haxelib:hxnodejs
+    lix install haxelib:hxcpp
 fi
 
 # Run these tests on every target that could be used for a NAT front-end
