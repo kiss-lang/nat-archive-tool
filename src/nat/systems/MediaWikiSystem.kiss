@@ -11,7 +11,7 @@
         canProcess
         processor))
 
-// TODO make this an externMethod --
+// TODO rewrite all of this without #extern:
 // but mediaWikiUrl, headers, and maxLag will still have to be specified, not as args
 // unless all vars and props are passed to externmethods by default
 (method :Option<Dynamic> query [:Map<String,Array<String>> params]

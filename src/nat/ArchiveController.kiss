@@ -303,8 +303,8 @@
 
     // Add systems!
     (archive.addAndProcessSystem nameSystem ui)
-    (archive.addSystem (new RemarkableAPISystem))
-    (archive.addSystem (new WikipediaImageSystem))
+    // WikipediaImageSystem is unavailable until MediaWikiSystem can be rewritten without #extern:
+    // (archive.addSystem (new WikipediaImageSystem))
     (archive.addSystem (new ImageAttachmentSystem))
     (archive.addAndProcessSystem (new KeyShortcutSystem this) ui)
     (archive.addSystem (new DLSystem))
