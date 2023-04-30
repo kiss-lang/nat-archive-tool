@@ -2,6 +2,5 @@
 -lib uuid
 -lib kiss
 -lib kiss-tools
--lib requests-externs
 -cp src
 --main test.TestMain
