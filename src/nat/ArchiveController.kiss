@@ -51,7 +51,7 @@
                         (trySubmit (readString stream))))
                 (enterTextAgain)))
         ((or TagsFromAll TagsFromSelected)
-            (chooseFromTags arg.type continuation))
+            (chooseFromTags arg.type continuation stream))
         ((Number min max inStepsOf)
             (unless min (set min Math.NEGATIVE_INFINITY))
             (unless max (set max Math.POSITIVE_INFINITY))
@@ -163,7 +163,7 @@
 (method :Array<String> allSelectedTags []
     (allTags _selectedEntries))
 
-(method chooseFromTags [:CommandArgType type :Dynamic->Void cc &opt tagsToChooseFrom &opt tagsChosen]
+(method chooseFromTags [:CommandArgType type :Dynamic->Void cc :Stream stream &opt :Array<String> tagsToChooseFrom :Array<String> tagsChosen]
     (let [tagsToChooseFrom 
                 (or tagsToChooseFrom 
                     (concat ["CONFIRM"]
@@ -172,21 +172,30 @@
                             (TagsFromSelected (allSelectedTags))
                             (never otherwise))))
             tagsChosen (or tagsChosen [])]
-        (ui.chooseBetweenStrings
-            "Tags:" 
-            tagsToChooseFrom 
-            ->:Void choice (case choice
-                ("CONFIRM" (cc tagsChosen))
-                ("DEFINE NEW TAG"
-                    (ui.enterText "New tag (must be legal as a haxe var name):"
-                        // TODO check lowercase valid symbol etc.
-                        ->:Void newTag {(tagsChosen.push newTag) (chooseFromTags type cc tagsToChooseFrom tagsChosen)}
-                        Math.POSITIVE_INFINITY))
-                (other
-                    (tagsToChooseFrom.remove other)
-                    (tagsChosen.push other)
-                    (chooseFromTags type cc tagsToChooseFrom tagsChosen))
-                (never null)))))
+        (withFunctions 
+            [
+                (:Void checkChoice [choice]
+                    (case choice
+                        ((or "" "CONFIRM") (cc tagsChosen))
+                        ("DEFINE NEW TAG"
+                            (ui.enterText "New tag (must be legal as a haxe var name):"
+                                // TODO check lowercase valid symbol etc.
+                                ->:Void newTag {(tagsChosen.push newTag) (chooseFromTags type cc stream tagsToChooseFrom tagsChosen)}
+                                Math.POSITIVE_INFINITY))
+                        (other
+                            (tagsToChooseFrom.remove other)
+                            (tagsChosen.push other)
+                            (chooseFromTags type cc stream tagsToChooseFrom tagsChosen))
+                        (never null)))
+            ]
+            (stream.dropWhitespace)
+            // If no text argument was pre-supplied, use the ui for it
+            (if (or (stream.isEmpty) (stream.dropStringIf "_"))
+                    (ui.chooseBetweenStrings
+                        "Tags:" 
+                        tagsToChooseFrom 
+                        checkChoice)
+                (checkChoice (readString stream))))))
 
 // TODO try catch and ui.reportError
 // TODO maaaybe support escape sequences?
