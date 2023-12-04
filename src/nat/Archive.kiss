@@ -67,6 +67,11 @@
     (doFor system systems 
         (system.process this ui)))
 
+(method processSystem [:Class<Dynamic> clazz &opt :ArchiveUI ui]
+    (doFor system systems
+        (when (= (Type.getClass system) clazz)
+            (system.process this ui))))
+
 (prop &mut :Entry->Dynamic defaultInitializer null)
 
 (method :Entry createEntry [:Entry->Dynamic initializer] // initializer returns Dynamic so ->:Void isn't required
