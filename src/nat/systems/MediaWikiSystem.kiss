@@ -1,0 +1,78 @@
+(load "../Lib.kiss")
+(loadFrom "kiss-tools" "src/kiss_tools/RefactorUtil.kiss")
+
+(defNew [:String name
+            &prop :String mediaWikiUrl
+            // TODO make a &super annotation that passes an argument to the super constructor
+            :EntryChecker canProcess
+            :EntryProcessor processor
+            &prop :Null<Float> maxLag] 
+    (super
+        name
+        canProcess
+        processor))
+
+(method :Void query [:Map<String,Array<String>> params :Option<Dynamic>->Void cc]
+    (#when lime
+        (let [request (new HTTPRequest<Dynamic> mediaWikiUrl)
+                :Map<String,String> innerParams
+                    [
+                        =>"action" "query"
+                        =>"maxlag" "$maxLag"
+                        =>"format" "json"
+                    ]]
+            (set request.headers [(new lime.net.HTTPRequestHeader "User-Agent" "NatArchiveTool/0.0.0 (https://github.com/kiss-lang/nat-archive-tool; natquaylenelson@gmail.com) Lime/8.0.1")])
+            (set request.method lime.net.HTTPRequestMethod.GET)
+            (set request.timeout 2)
+
+            (+= request.uri "?")
+            (doFor =>param paramValues params (dictSet innerParams param (paramValues.join "|")))
+            (doFor =>key value innerParams
+                (+= request.uri "${key}=$(StringTools.urlEncode value)&"))
+            (set request.uri (substr request.uri 0 -1))
+
+            (quickToggle urlencode (set request.uri (StringTools.urlEncode request.uri)))
+
+            (print request.uri)
+
+            (let [future (request.load request.uri)]
+                (future.onError ->error {
+                    (print "Error $error")
+                    (print request.responseStatus)
+                    (print request.responseData)
+                })
+                (future.onComplete ->:Void _ 
+                    {
+                        (print request.responseStatus)
+                        (print request.responseData)
+                        (let [result (request.responseData.toString)
+                                data (Json.parse result)]
+                            (if data.query
+                                    (cc (Some data.query))
+                                (cc None)))
+                    })))))
+
+(method :Void queryImageTitles [:Array<String> pageTitles :Array<String>->Void cc]
+    (query [=>"titles" pageTitles =>"prop" ["images"]]
+        ->:Void [queryResult]
+            (cc
+                (ifLet [(Some queryResult) queryResult]
+                        (flatten
+                            (for =>_id page (the haxe.DynamicAccess<Dynamic> queryResult.pages)
+                                (if page.images
+                                        (page.images.map ->image image.title)
+                                    [])))
+                    []))))
+
+(method :Void queryImageUrls [:Array<String> imageTitles :Array<String>->Void cc]
+    (query [=>"titles" imageTitles =>"prop" ["imageinfo"] =>"iiprop" ["url"]]
+        ->:Void [queryResult]
+            (cc
+                (ifLet [(Some queryResult) queryResult]
+                        (flatten
+                            (for =>_id image
+                                    (the haxe.DynamicAccess<Dynamic> queryResult.pages)
+                                (if image.imageinfo
+                                        (image.imageinfo.map ->image image.url)
+                                    [])))
+                    []))))
