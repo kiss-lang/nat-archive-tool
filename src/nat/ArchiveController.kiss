@@ -553,6 +553,9 @@
                 (tryRunCommand (readComponent e NATCommand)) 0)
             ((hasComponent e NATCommands)
                 (tryRunCommands (readComponent e NATCommands)) 0)
+            // Switch to a playground
+            ((catsMatch e "(and playground CatsMatchExp Name)")
+                (SwitchPlayground (readComponent e Name)) 0)
             // Start .exe files
             (e.files
                 (doFor file e.files
