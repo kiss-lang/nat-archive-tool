@@ -16,7 +16,7 @@
                         (set ui.shortcutHandler.onSelectItem
                             ->e {
                                     (ui.hidePrefixMap)
-                                    (invokeEntry archive ui e)
+                                    (controller.InvokeEntry e)
                                 })
                         (set ui.shortcutHandler.onBadKey ->[key map] (ui.displayMessage "$key is not mapped to a shortcut in this context: $map"))
                         (set setup true))
@@ -26,12 +26,3 @@
                         (dictSet descriptions (readComponent e KeyShortcut) true)))
                 0
             }))
-
-(method invokeEntry [archive ui :Entry e]
-    // TODO make this doCond
-    (cond
-        ((hasComponent e NATCommand)
-            (controller.tryRunCommand (readComponent e NATCommand)) 0)
-        ((hasComponent e NATCommands)
-            (controller.tryRunCommands (readComponent e NATCommands)) 0)
-        (true (ui.displayMessage "tried to invoke ${e.id} but it has no available actions"))) 0)

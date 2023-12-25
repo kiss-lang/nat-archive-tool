@@ -539,4 +539,14 @@
             (addComponent archive e Dates [=>"Created" (Date.now)])
         })])
     
-    )
+    (defCommand InvokeEntry [e SelectedEntry]
+        (cond
+            ((hasComponent e NATCommand)
+                (tryRunCommand (readComponent e NATCommand)) 0)
+            ((hasComponent e NATCommands)
+                (tryRunCommands (readComponent e NATCommands)) 0)
+            (true
+                (ui.displayMessage "tried to invoke ${e.id} but it has no available actions") 0))
+        [e])
+
+)
