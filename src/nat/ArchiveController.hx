@@ -6,9 +6,11 @@ import kiss.Stream;
 import nat.components.Position;
 import haxe.Constraints;
 import haxe.DynamicAccess;
+import haxe.io.Path;
 import uuid.Uuid;
 import nat.systems.*;
 import nat.components.*;
+using StringTools;
 
 enum CommandArgType {
     // When called interactively, automatically pass the currently selected Entry(s) to the function

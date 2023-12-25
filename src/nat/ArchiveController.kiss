@@ -544,6 +544,8 @@
             (addEntryLink archive e linkTo)))
     
     (defCommand InvokeEntry [e SelectedEntry]
+        (localFunction noInvocation []
+            (ui.displayMessage "tried to invoke ${e.id} but it has no available actions"))
         (cond
             ((hasComponent e EntryLink)
                 (InvokeEntry (dictGet archive.entries (readComponent e EntryLink))))
@@ -551,8 +553,15 @@
                 (tryRunCommand (readComponent e NATCommand)) 0)
             ((hasComponent e NATCommands)
                 (tryRunCommands (readComponent e NATCommands)) 0)
+            // Start .exe files
+            (e.files
+                (doFor file e.files
+                    (when (file.endsWith ".exe")
+                        (tryProcess (Path.withoutDirectory file) [] ->error (ui.displayMessage "Error launching exe ${file}: $error") null false (Path.directory file))
+                        (return [e])))
+                (noInvocation) 0)
             (true
-                (ui.displayMessage "tried to invoke ${e.id} but it has no available actions") 0))
+                (noInvocation) 0))
         [e])
 
 )
