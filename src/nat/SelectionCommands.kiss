@@ -81,4 +81,4 @@
 // so Cats may be the canonical name
 
 (defSelectCommand SelectByName [name (Text null)]
-    (nameSystem.getEntries name))
+    (nameSystem.getEntries archive name))

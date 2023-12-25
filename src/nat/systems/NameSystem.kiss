@@ -1,6 +1,6 @@
 (load "../Lib.kiss")
 
-(prop :Map<String,Array<Entry>> entriesByName (new Map))
+(prop :Map<String,Map<String,Bool>> entriesByName (new Map))
 
 // Stores a case-insensitive map of named entries, for instant lookup by name
 (defNew []
@@ -9,13 +9,13 @@
         ->[archive e] (hasComponent e Name)
         ->[archive e &opt ui] (let [name (readComponent e Name)]
                              (if (entriesByName.exists (name.toLowerCase))
-                                    (.push (dictGet entriesByName (name.toLowerCase)) e)
-                                (dictSet entriesByName (name.toLowerCase) [e]))
+                                    (dictSet (dictGet entriesByName (name.toLowerCase)) e.id true)
+                                (dictSet entriesByName (name.toLowerCase) [=>e.id true]))
                         // Because the if statement doesn't unify by type :(
                         null)))
 
-(method :Array<Entry> getEntries [name]
+(method :Array<Entry> getEntries [:nat.Archive archive name]
     (let [entries (dictGet entriesByName (name.toLowerCase))]
         (if entries
-                entries
+                (for id (entries.keys) (dictGet archive.entries id))
             [])))
