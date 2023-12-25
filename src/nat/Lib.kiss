@@ -149,6 +149,10 @@
             (doFor e2 entriesToRemove (conn.remove e2.id))))
     e)
 
+(function addEntryLink [:nat.Archive archive :nat.Entry e :nat.Entry eLink]
+    (addComponent archive e EntryLink eLink.id)
+    e)
+
 (function colorIFromF [:nat.components.ColorF cf]
     (object r (Std.int (* 255 cf.r)) g (Std.int (* 255 cf.g)) b (Std.int (* 255 cf.b)) a (Std.int (* 255 cf.a))))
 

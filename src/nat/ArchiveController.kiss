@@ -539,8 +539,14 @@
             (addComponent archive e Dates [=>"Created" (Date.now)])
         })])
     
+    (defCommand AddEntryLink [entries (SelectedEntries 1 null) linkTo OneEntry]
+        (for e entries
+            (addEntryLink archive e linkTo)))
+    
     (defCommand InvokeEntry [e SelectedEntry]
         (cond
+            ((hasComponent e EntryLink)
+                (InvokeEntry (dictGet archive.entries (readComponent e EntryLink))))
             ((hasComponent e NATCommand)
                 (tryRunCommand (readComponent e NATCommand)) 0)
             ((hasComponent e NATCommands)
