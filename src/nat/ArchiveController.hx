@@ -10,6 +10,7 @@ import haxe.io.Path;
 import uuid.Uuid;
 import nat.systems.*;
 import nat.components.*;
+import sys.FileSystem;
 using StringTools;
 
 enum CommandArgType {
@@ -17,6 +18,7 @@ enum CommandArgType {
     // TODO eventually these will also be passed automatically when called programatically
     SelectedEntry;
     SelectedEntries(min:Null<Int>, max:Null<Int>);
+
     // String input
     Text(maxLength:Null<Float>); // max length is a float so Math.POSITIVE_INFINITY can be used
     // Any number of string inputs:
@@ -32,8 +34,11 @@ enum CommandArgType {
     TagsFromAll;
     TagsFromSelected;
 
-    // TODO File
-    // TODO Files
+    // Must be disambiguated from sys.io.File:
+    OneFile;
+    Files(min:Null<Float>, max:Null<Float>);
+    Folder;
+    Folders(min:Null<Float>, max:Null<Float>);
 
     Position;
     

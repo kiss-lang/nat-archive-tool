@@ -147,9 +147,74 @@
                     (continuation entries)))
                 min
                 max))
+        (OneFile
+            (collectFSArgs arg.name stream false 1 1 continuation))
+        ((Files min max)
+            (collectFSArgs arg.name stream false min max continuation))
+        (Folder
+            (collectFSArgs arg.name stream true 1 1 continuation))
+        ((Folders min max)
+            (collectFSArgs arg.name stream true min max continuation))
         (Position
             (ui.choosePosition "${arg.name}:" continuation))
         (never null)))
+
+// Collect file or folder arguments using ui.chooseString
+(method :Void collectFSArgs [name stream :Bool folder :Null<Float> min :Null<Float> max :Dynamic->Void continuation &opt :String cwd :Array<String> selectedPaths]
+    (unless min (set min 1))
+    (unless max (set max Math.POSITIVE_INFINITY))
+    (localVar rootDir (case (Sys.systemName) ("Windows" "C:/") (otherwise "/")))
+    (unless cwd (set cwd rootDir))
+    (unless selectedPaths (set selectedPaths []))
+    (localVar justOne (= min max 1))
+    (stream.dropWhitespace)
+    (if (or (stream.isEmpty) (stream.dropStringIf "_"))
+            // Prompt for choice, keep passing an empty dummy stream to the recursive calls so they don't eat more _
+            (let [dummyStream (Stream.fromString "")
+                    cwdContents (FileSystem.readDirectory cwd)
+                    fullPathsCwdContents (for path cwdContents (joinPath cwd path))]
+                (doFor idx (range cwdContents.length)
+                    (when (FileSystem.isDirectory (nth fullPathsCwdContents idx))
+                        (+= (nth cwdContents idx) "/"))
+                    (when (selectedPaths.contains (nth fullPathsCwdContents idx))
+                        (set (nth cwdContents idx) "* $(nth cwdContents idx)")))
+                (when folder (cwdContents.unshift "CHOOSE"))
+                (when (>= selectedPaths.length min)
+                    (cwdContents.unshift "SUBMIT ALL"))
+                (unless (= cwd rootDir)
+                    (cwdContents.unshift "../"))
+                (ui.chooseBetweenStrings name cwdContents 
+                    ->:Void choice
+                        (case choice
+                            (".."
+                                (let [cwdParts (cwd.split "/")
+                                        _ (cwdParts.pop)
+                                        parentDir (cwdParts.join "/")]
+                                    (collectFSArgs name dummyStream folder min max continuation parentDir selectedPaths)))
+                            ("SUBMIT ALL" (continuation selectedPaths))
+                            ("CHOOSE"
+                                (cond
+                                    (justOne (continuation cwd))
+                                    (true
+                                        (selectedPaths.push cwd)
+                                        (cond 
+                                            ((= selectedPaths.length max) (continuation selectedPaths))
+                                            (true (collectFSArgs name dummyStream folder min max continuation cwd selectedPaths))))))
+                            ((unless (path.endsWith "/") path)
+                                (cond
+                                    (justOne
+                                        (continuation (joinPath cwd path)))
+                                    (true
+                                        (selectedPaths.push (joinPath cwd path))
+                                        (cond 
+                                            ((= selectedPaths.length max) (continuation selectedPaths))
+                                            (true (collectFSArgs name dummyStream folder min max continuation cwd selectedPaths))))))
+                            (folderPath
+                                (collectFSArgs name dummyStream folder min max continuation (joinPath cwd folderPath) selectedPaths))
+                            (never otherwise))))
+        // TODO Read the stream
+        (print "trying to read the stream for a filesystem argument (not implemented)! `${stream.content}`"))
+    )
 
 (method :Array<String> allTags [&opt :Array<Entry> entries]
     (let [:Array<Entry> entries (or entries (collect (archive.entries.iterator)))
@@ -267,6 +332,8 @@
                         ((VarText _) `:Array<String> ,name)
                         (TagsFromAll `:Array<String> ,name)
                         (TagsFromSelected `:Array<String> ,name)
+                        ((exprOr OneFile Folder) `:String ,name)
+                        ((exprOr (Files _ _) (Folders _ _)) `:Array<String> ,name)
                         ((Number _ _ _) `:Float ,name)
                         ((Numbers _ _ _) `:Array<Float> ,name)
                         (Position `:Position ,name)))
@@ -456,9 +523,7 @@
             (AddNATCommands [e] commands)})])
 
     (defCommand AddFiles [entries (SelectedEntries 1 null)
-        // TODO add File and Files as an argument type for commands, ArchiveUI
-        // TODO make tkinter file browser externs and use tkinter as the file picking mechanism for CLI
-                                files (VarText null)]
+                                files (Files 1 null)]
         (doFor e entries
             (addFiles archive e files))
         entries)
@@ -567,4 +632,19 @@
                 (noInvocation) 0))
         [e])
 
+    (defCommand TestFilePick [f OneFile]
+        (ui.displayMessage f)
+        [])
+
+    (defCommand TestFilesPick [f (Files 1 3)]
+        (ui.displayMessage "$f")
+        [])
+
+    (defCommand TestFolderPick [f Folder]
+        (ui.displayMessage f)
+        [])
+    
+    (defCommand TestFoldersPick [f (Folders 1 3)]
+        (ui.displayMessage "$f")
+        [])
 )
