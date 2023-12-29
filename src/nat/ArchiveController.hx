@@ -12,6 +12,7 @@ import nat.systems.*;
 import nat.components.*;
 import sys.FileSystem;
 using StringTools;
+using haxe.io.Path;
 
 enum CommandArgType {
     // When called interactively, automatically pass the currently selected Entry(s) to the function

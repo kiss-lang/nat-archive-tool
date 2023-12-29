@@ -113,4 +113,6 @@
     (haxe.Json.stringify e null "\t"))
 
 (method :String filePath [file]
+    // TODO don't fix absolute paths
+
     (joinPath archiveDir "files" file))

@@ -200,6 +200,7 @@
                                         (cond 
                                             ((= selectedPaths.length max) (continuation selectedPaths))
                                             (true (collectFSArgs name dummyStream folder min max continuation cwd selectedPaths))))))
+                            // TODO allow de-selecting selected items (they start with "* ")
                             ((unless (path.endsWith "/") path)
                                 (cond
                                     (justOne
@@ -647,4 +648,25 @@
     (defCommand TestFoldersPick [f (Folders 1 3)]
         (ui.displayMessage "$f")
         [])
+
+    (defCommand ImportFolder [folder Folder]
+        (localVar newEntries [])
+        (walkDirectory "" folder
+            ->file (archive.createEntry ->e {
+                (addComponent archive e Name (file.withoutDirectory))
+                (addFiles archive e [file] true)
+                (newEntries.push e)
+            }))
+        newEntries)
+
+    (defCommand OpenFiles [es (SelectedEntries 1 null)]
+        (doFor e es
+            (doFor file e.files
+                (localVar args [(archive.filePath file)])
+                (when (= (Sys.systemName) "Windows") (args.unshift ""))
+                (Sys.command
+                    (case (Sys.systemName) ("Windows" "start") ("Linux" "xdg-open") ("Mac" "open") (never otherwise))
+                    args)))
+        [])
+
 )
