@@ -669,4 +669,11 @@
                     args)))
         [])
 
+    (defCommand RateUp [es (SelectedEntries 1 null) reason (Text null)]
+        (for e es
+            (addUpDownRating archive e true reason)))
+
+    (defCommand RateDown [es (SelectedEntries 1 null) reason (Text null)]
+        (for e es
+            (addUpDownRating archive e false reason)))
 )

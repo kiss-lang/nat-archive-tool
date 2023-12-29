@@ -173,3 +173,21 @@
     (let [fields (Reflect.fields o)]
         (and (= fields.length 3)
             (apply and (for f ["id" "components" "files"] (contains fields f))))))
+
+(function addUpDownRating [:nat.Archive archive :nat.Entry e :Bool up &opt :String reason]
+    (unless (hasComponent e UpDownRank)
+        (addComponent archive e UpDownRank (object up 0 down 0 upReasons [] downReasons [])))
+        
+    (withWritableComponents archive e [rank UpDownRank]
+        (if up
+                {
+                    (+= rank.up 1)
+                    (when reason
+                        (rank.upReasons.push reason))
+                }
+            {
+                (+= rank.down 1)
+                (when reason
+                    (rank.downReasons.push reason))
+            }))
+    e)
